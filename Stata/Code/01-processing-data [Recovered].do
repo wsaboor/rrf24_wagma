@@ -71,10 +71,10 @@
 			}	
 		
 		* Explore variables for outliers
-		sum ???
+		sum income expenditure age
 		
 		* dropping, ordering, labeling before saving
-		drop 	???
+		drop 	temp_var1 temp_var2
 				
 		order 	???
 		
