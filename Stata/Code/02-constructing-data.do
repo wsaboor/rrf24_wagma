@@ -3,7 +3,8 @@
 * Data construction: HH 
 *------------------------------------------------------------------------------- 
 	// Load household-level data (HH)
-	use "${data}/Intermediate/TZA_CCT_HH.dta", clear
+	use , clear
+	
 	
 	
 	// Exercise 1: Plan construction outputs ----
@@ -27,21 +28,21 @@
 	
 	di $acre_conv
 	
-	generate 	area_acre = ??? 				if ??? == 1 , after(ar_farm)
-	replace 	area_acre = ??? * $acre_conv 	if ??? == 2
+	generate 	area_acre = ar_farm 				if unit == 1 , after(ar_farm)
+	replace 	area_acre = ar_farm * $acre_conv 	if unit == 2
 	
-	lab var		area_acre ???
+	lab var		area_acre "Area in acres"
 	
 	* Consumption in usd
-	global usd ???
+	global usd 0.00037
 	
-	foreach cons_var in ??? ??? {
+	foreach cons_var in food_cons nonfood_cons {
 		
 		* Save labels 
 		local `cons_var'_lab: variable label `cons_var'
 		
 		* generate vars
-		gen `cons_var'_usd = ??? * ??? , after(???)
+		gen `cons_var'_usd = 'cons_var' *  , after(???)
 		
 		* apply labels to new variables
 		lab var `cons_var'_usd ???
@@ -57,7 +58,7 @@
 		
 		local `win_var'_lab: variable label `win_var'
 		
-		winsor 	`win_var', p(???) high gen(`win_var'_w)
+		winsor 	`win_var', p(0.05) high gen(`win_var'_w)
 		order 	`win_var'_w, after(`win_var')
 		lab var `win_var'_w "``win_var'_lab' (Winsorized 0.05)"
 		
@@ -78,21 +79,21 @@
 				// 3. Average sick days.
 				// 4. Total treatment cost in USD.
 	use "${data}/Intermediate/TZA_CCT_HH_mem.dta", clear
-	collapse 	(sum) ??? ///
-				(max) ??? ///
-				(mean) m_cost = ??? ???, by(???)
+	collapse 	(sum) treat_cost ///
+				(max) read sick ///
+				(mean) m_cost = treat_cost days_sick, by(hhid)
 				
-	replace treat_cost = ??? if mi(???)	
+	replace treat_cost =  if mi(m_cost)	
 	
 				//Cost in USD
-	gen ??? = ??? * ???
+	gen treat_cost_usd = treat_cost * $usd
 
 				// Add labels	
 				
-	lab var ??? 		???
-	lab var ??? 		???
-	lab var ??? 		???
-	lab var ??? 		???
+	lab var read 			"Any member can read/write"
+	lab var sick 			"Any member was sick in the last 4 weeks"
+	lab var days_sick 		"Average sick days"
+	lab var treat_cost_usd 	"Total cost of treament"
 	
 	drop ??? ??? 
 
@@ -107,10 +108,10 @@
 	// Exercise 5: Merge HH and HH-member data ----
 		// Instructions:
 			// Merge the household-level data with the HH-member level indicators.
-	merge ??? ??? using ???, assert(3) nogen 
+	merge 1:1 hhid using 'mem', assert(3) nogen 
 			
 			// Merge hh and member data with the treatment data, ensure the treatment status is included in the final dataset.
- 	merge ??? ??? using ???, assert(3) nogen 
+ 	merge m:1 vid using "${data}/Intermediate/TZA_treatment.dta", assert(3) nogen 
 
 	
 			//Save data
@@ -125,8 +126,8 @@
 			// Calculate the total number of medical facilities by summing relevant columns.
 			// Apply appropriate labels to the new variables created.
 			
-	egen ??? = ???(??? ???)
-	lab var ??? ???
+	egen n_medical = rowtotal(n_clinic n_hospital)
+	lab var n_medical "No. of medcal facilities"
 	
 	// Exercise 6: Save final dataset ----
 		// Instructions:
