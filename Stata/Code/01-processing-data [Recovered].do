@@ -1,12 +1,11 @@
-*-----------------------------------------------------------------------------------------------------------------------------------------------*
 * RRF 2024 - Processing Data Template	
 *-------------------------------------------------------------------------------	
 * Loading data
 *------------------------------------------------------------------------------- 	
 	
 	* Load TZA_CCT_baseline.dta
-	use "${data}/Raw/TZA_CCT_baseline.dta", clear
-	use "C:/Users/wb610097/OneDrive - WBG/Desktop/reproducible research fundamental/rrf24_wagma/DataWork/Data/Raw/TZA_CCT_baseline.dta", clear
+	 use "C:/Users/wb610097/OneDrive - WBG/Desktop/reproducible research fundamental/rrf24_wagma/DataWork/Data/Raw/TZA_CCT_baseline.dta", clear
+	 
 *-------------------------------------------------------------------------------	
 * Checking for unique ID and fixing duplicates
 *------------------------------------------------------------------------------- 		
@@ -27,13 +26,6 @@
 	local ids 		hhid vid enid
 	
 	* Unit: household
-
-	local hh_vars 	floor - n_elder ///
-					food_cons - submissionday
-					
-	* Unit: Household-memebr
-	local hh_mem	gender age read clinic_visit sick days_sick ///
-					treat_fin treat_cost ill_impact days_impact
 	local hh_vars 	floor - n_elder///
 					food_cons - submissionday
 	
@@ -45,12 +37,8 @@
 	* define locals with suffix and for reshape
 	foreach mem in `hh_mem' {
 		
-
-		local mem_vars 		"`mem_vars' `mem'_*"
-		local reshape_mem	"`reshape_mem' `mem'_"
 		local mem_vars 		"'mem_vars' 'mem'_*"
 		local reshape_mem	"'reshape_mem' 'mem'_"
-
 	}
 		
 	
@@ -64,62 +52,40 @@
 		keep `ids' `hh_vars'
 		
 		* Check if data type is string
-		ds, has(type string)	
+				
 		
-		* Fixing submission date
-		gen submissiondate = date(submissionday, "YMD hms" )
-		format submissiondate %td
-		
-		* Encoding area farm unit
-		encode ar_farm_unit, gen(ar_unit)
-		
-		destring duration, replace
-		
-		* clean crop_other
-		replace crop_other = proper(crop_other)
-		
-		replace crop = 40 if regex(crop_other, "Coconut") == 1
-		replace crop = 41 if regex(crop_other, "Sesame") == 1
-		
-		label define df_CROP 40 "Coconut" 41 "Sesame", add
+		* Fix data types 
+		* numeric should be numeric
+		* dates should be in the date format
+		* Categorical should have value labels 
 		
 				
 		
 		* Turn numeric variables with negative values into missings
 		ds, has(type numeric)
-
-		global numVars `r(varlist)'
-
-		foreach numVar of global numVars {
-			
-			recode `numVar' (-88 = .d) //.d is don't know
-		}	
-
 		global numVar 'r(Varlist)'
 
 		foreach numVar of global numVars {
 			
 			recode 'numVar' (-88 = .d)
 			}	
-
 		
 		* Explore variables for outliers
-		sum food_cons nonfood_cons ar_farm, det
+		sum income expenditure age
 		
 		* dropping, ordering, labeling before saving
-		drop 	ar_farm_unit submissionday crop_other
+		drop 	temp_var1 temp_var2
 				
-		order 	ar_unit, after(ar_farm)
+		order 	???
 		
-		lab var submissiondate "Date of interview"
+		lab var ???
 		
-		isid hhid, sort 
+		isid ???
 		
 		* Save data		
-		iesave 	"${data}/Intermediate/TZA_CCT_HH.dta", ///
-				idvars(hhid)  version(15) replace ///
-				report(path("${outputs}/TZA_CCT_HH_report.csv") replace)  
-		  
+		iesave 	"${data}/Intermediate/???", ///
+				idvars(???)  version(???) replace ///
+				report(path("${outputs}/???.csv") replace)  
 		
 	restore
 	
@@ -129,31 +95,29 @@
 
 	preserve 
 
-		keep `mem_vars' `ids'
+		keep ???
 
 		* tidy: reshape tp hh-mem level 
-		reshape long `reshape_mem', i(`ids') j(member) 
+		reshape ???
 		
 		* clean variable names 
-		rename *_ *
+		rename ???
 		
 		* drop missings 
-		drop if mi(gender)
+		drop if mi(???)
 		
 		* Cleaning using iecodebook
 		// recode the non-responses to extended missing
 		// add variable/value labels
 		// create a template first, then edit the template and change the syntax to 
 		// iecodebook apply
-		iecodebook apply 	using ///
+		iecodebook template 	using ///
 								"${outputs}/hh_mem_codebook.xlsx"
 								
-		isid hhid member					
+		isid ???					
 		
 		* Save data: Use iesave to save the clean data and create a report 
-		iesave 	"${data}/Intermediate/TZA_CCT_HH_mem.dta", ///
-				idvars(hhid member)  version(15) replace ///
-				report(path("${outputs}/TZA_CCT_HH_mem_report.csv") replace)    
+		iesave 	???  
 				
 	restore			
 	
@@ -162,25 +126,28 @@
 *------------------------------------------------------------------------------- 	
 	
 	* Import secondary data 
-	import delimited "${data}/Raw/TZA_amenity.csv", clear
+	???
 	
-	* reshape wide 
-	reshape wide n , i(adm2_en) j(amenity) str
+	* reshape  
+	reshape ???
 	
 	* rename for clarity
-	rename n* n_*
+	rename ???
 	
-	encode adm2_en , gen(district) 
+	* Fix data types
+	encode ???
 	
-	* Label vars 
+	* Label all vars 
 	lab var district "District"
-	lab var n_school "No. of schools"
-	lab var n_clinic "No. of clinics"
-	lab var n_hospital "No. of hospitals"
+	???
+	???
+	???
 	
 	* Save
-	keeporder district n_*
+	keeporder ???
 	
-	save "${data}/Intermediate/TZA_amenity_tidy.dta", replace
+	save "${data}/Intermediate/???.dta", replace
+
 	
 ****************************************************************************end!
+	

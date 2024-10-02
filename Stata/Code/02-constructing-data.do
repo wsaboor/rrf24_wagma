@@ -5,6 +5,9 @@
 *------------------------------------------------------------------------------- 
 
 	use "${data}/Intermediate/TZA_CCT_HH.dta", clear
+=======
+	// Load household-level data (HH)
+	use , clear
 	
 	* Area in acre
 	// Equal to area farm if unit is acres, 
@@ -13,11 +16,17 @@
 	global acre_conv 2.47
 	
 	di $acre_conv
-	
+
 	generate 	area_acre = ar_farm 				if ar_unit == 1 , after(ar_farm)
 	replace 	area_acre = ar_farm * $acre_conv 	if ar_unit == 2
 	
 	lab var		area_acre "Area farmed in acres"
+=======
+	generate 	area_acre = ar_farm 				if unit == 1 , after(ar_farm)
+	replace 	area_acre = ar_farm * $acre_conv 	if unit == 2
+	
+	lab var		area_acre "Area in acres"
+
 	
 	* Consumption in usd
 	global usd 0.00037
@@ -28,8 +37,10 @@
 		local `cons_var'_lab: variable label `cons_var'
 		
 		* generate vars
+
 		gen `cons_var'_usd = `cons_var' * $usd , after(`cons_var')
-		
+=======
+		gen `cons_var'_usd = 'cons_var' *  , after(???)		
 		* apply labels to new variables
 		lab var `cons_var'_usd "``cons_var'_lab' (USD)"
 		
@@ -66,6 +77,22 @@
 				(mean) m_cost = treat_cost days_sick, by(hhid)
 				
 	replace treat_cost = m_cost if mi(m_cost)		
+
+	collapse 	(sum) treat_cost ///
+				(max) read sick ///
+				(mean) m_cost = treat_cost days_sick, by(hhid)
+				
+	replace treat_cost =  if mi(m_cost)	
+	
+				//Cost in USD
+	gen treat_cost_usd = treat_cost * $usd
+
+				// Add labels	
+				
+	lab var read 			"Any member can read/write"
+	lab var sick 			"Any member was sick in the last 4 weeks"
+	lab var days_sick 		"Average sick days"
+	lab var treat_cost_usd 	"Total cost of treament"
 	
 	* Cost in USD
 	gen treat_cost_usd = treat_cost * $usd
@@ -85,6 +112,16 @@
 *-------------------------------------------------------------------------------	
 * Data construction: merge all hh datasets
 *------------------------------------------------------------------------------- 	
+
+		use `hh', clear 
+
+	// Exercise 5: Merge HH and HH-member data ----
+		// Instructions:
+			// Merge the household-level data with the HH-member level indicators.
+	merge 1:1 hhid using 'mem', assert(3) nogen 
+			
+			// Merge hh and member data with the treatment data, ensure the treatment status is included in the final dataset.
+ 	merge m:1 vid using "${data}/Intermediate/TZA_treatment.dta", assert(3) nogen 
 	
 	* Start with hh level 
 	use `hh', clear 
@@ -103,11 +140,26 @@
 *------------------------------------------------------------------------------- 	
 	
 	use "${data}/Intermediate/TZA_amenity_tidy.dta", clear
-	
+
 	* Total medical facilities 
 	egen n_medical = rowtotal(n_clinic n_hospital)
 	
 	lab var n_medical "No. of medical facilities"
+=======
+	// Exercise 4.2: Data construction: Secondary data ----
+		// Instructions:
+			// Calculate the total number of medical facilities by summing relevant columns.
+			// Apply appropriate labels to the new variables created.
+			
+	egen n_medical = rowtotal(n_clinic n_hospital)
+	lab var n_medical "No. of medcal facilities"
+	
+	// Exercise 6: Save final dataset ----
+		// Instructions:
+			// Only keep the variables you will use for analysis.
+			// Save the final dataset for further analysis.
+			// Save both the HH dataset and the secondary data.
+
 
 	* Save data
 	save "${data}/Final/TZA_amenity_analysis.dta", replace
