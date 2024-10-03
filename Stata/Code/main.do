@@ -38,6 +38,15 @@
 	* Run do files 
 	* Switch to 0/1 to not-run/run do-files 
 	if (0) do "${code}/01-processing-data.do"
+	global data "${code}/01-processing-data.do"
+	global code 
+	
+	
+	/* Install Packages
+	local user_comments ietoolkit iefieldkit winsor sumstat estout keeporder grcileg2 // Add required user-written commands
+	
+	for each
+	
 
 
 * End of do-file!	

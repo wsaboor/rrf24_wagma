@@ -74,7 +74,7 @@
 	
 	estadd local clustering "Yes"
 	
-	* Export results
+	* Export results in tex
 	esttab 	model1 model2 model3 ///
 			using "$outputs/regressions.tex" , ///
 			label ///
@@ -110,11 +110,11 @@
 		
 	}
 	
-	twoway	(kdensity nonfood_cons_usd_w if female_head == 1, color(purple)) ///
-			(kdensity nonfood_cons_usd_w if female_head == 0, color(gs12)) ///
+	twoway	(kdensity nonfood_cons_usd_w if female_head == 1, color(blue)) ///
+			(kdensity nonfood_cons_usd_w if female_head == 0, color(red)) ///
 			, ///
-			xline(`mean_1', lcolor(purple) 	lpattern(dash)) ///
-			xline(`mean_0', lcolor(gs12) 		lpattern(dash)) ///
+			xline(`mean_1', lcolor(blue) 	lpattern(dash)) ///
+			xline(`mean_0', lcolor(gs4) 		lpattern(dash)) ///
 			leg(order(0 "Household Head:" 1 "Female" 2 "Male" ) row(1) pos(6)) ///
 			xtitle("Non-food consumption value (USD)") ///
 			ytitle("Density") ///
@@ -128,6 +128,44 @@
 *-------------------------------------------------------------------------------			
 			
 	use "${data}/Final/TZA_amenity_analysis.dta", clear
+	
+	* create a variable to highlight the districts in sample
+	gen in_sample = inlist(district, 1, 3, 6)
+	
+	* Separate indicators by sample
+	separate n_school	, by(in_sample)
+	separate n_medical	, by(in_sample)
+	
+	* Graph bar for number of schools by districts
+	gr hbar 	n_school0 n_school1, ///
+				nofill ///
+				over(district, sort(n_school)) ///
+				legend(order(0 "Districts:" 1 "Not in Sample" 2 "In Sample") row(1)  pos(6)) ///
+				ytitle("Number of Schools") ///
+				name(g1, replace)
+				
+	* Graph bar for number of medical facilities by districts				
+	gr hbar 	n_medical0 n_medical1 , ///
+				nofill ///
+				over(district, sort( n_medical )) ///
+				legend(off) ///
+				ytitle("Number of Medical Facilities") ///
+				name(g2, replace)
+				
+	grc1leg2 	g1 g2, ///
+				row(1) legend(g1) ///
+				ycommon xcommon ///
+				title("Access to Amenities: By Districts", size())
+			
+	
+	gr export "$outputs/fig3.png", replace			
+			
+*-------------------------------------------------------------------------------			
+* Graphs: Secondary data
+*-------------------------------------------------------------------------------			
+			
+	use "${data}/Final/TZA_amenity_analysis.dta", clear
+	
 	
 	* createa  variable to highlight the districts in sample
 	gen in_sample = inlist(district, 1, 3, 6)
